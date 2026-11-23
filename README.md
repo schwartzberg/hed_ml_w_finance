@@ -1,47 +1,49 @@
 # Can Machine Learning Improve Stock-Sector Selection?
 
-CSCI E-278 *Applied Quantitative Finance and Machine Learning* — final project.
+Harvard CSCI E-278 · Applied Quantitative Finance and Machine Learning
 
-## Run
+## Approved project abstract
 
-1. Open `notebooks/Finance_with_ML_CSCI_E278.ipynb` in Google Colab or Jupyter with internet access.
-2. Run all cells in order. The notebook downloads Yahoo Finance daily adjusted OHLC for nine original US Select Sector SPDR ETFs and SPY (plus a quoted 13-week Treasury yield, `^IRX`).
-3. It saves CSV snapshots and hashes in the local `data/` folder. Retain your own snapshot if you need byte-for-byte reproduction; it is excluded from public GitHub.
-4. The final 2022–September 2026 return table, charts and written interpretation are generated from *executed historical data*, never invented.
+The following is the approved proposal for this project.
 
-## Pre-specified design and date discipline
+> **Can Machine Learning Improve Stock-Sector Selection?**
+>
+> I will test whether a random forest can select US stock-market sectors more effectively than a simple momentum rule. I will study nine long-established sector ETFs using historical data from 2015 to September 2026. And for each sector, I will calculate recent returns, moving-average trends and volatility.
+>
+> The model will predict whether a sector is likely to outperform the S&P 500 during the next month. Each month, a portfolio will hold the three sectors with the highest predicted probabilities, equally weighted. I am thinking that I will then compare it with a six-month momentum strategy selecting three sectors and with a buy-and-hold investment in SPY.
+>
+> I will use walk-forward testing so that each prediction uses only information available at the time.
+> I will include trading costs and compare returns, volatility, Sharpe ratios and also maximum drawdowns.
+>
+> The final aim is to see whether the machine-learning strategy adds value in unseen historical periods, and this is while recognising that past results cannot guarantee future returns.
 
-| Item | Rule |
-|---|---|
-| ETFs | XLB XLE XLF XLI XLK XLP XLU XLV XLY; benchmark SPY |
-| Preparatory data | 2014 daily adjusted prices for technical lookbacks |
-| Study period | January 2015–September 2026; first October 2026 opening for exit valuation |
-| Model inputs | 1m, 3m, 6m adjusted close returns; 63-day volatility; 200-day MA distance; 3m relative SPY return |
-| Target | Sector beats SPY over the *following* first-open to first-open investment month |
-| Signal / execution | Prior month final close -> next month first open |
-| Data leakage | Training label's exit opening must have occurred by signal close; no unfinished outcome used |
-| Training | Expanding monthly window (model re-fitted every month); historical results only |
-| Tuning | Four predefined forests, chosen by Jan 2019–Nov 2021 walk-forward Brier score |
-| Freeze | As of last trading close December 2021; **December 2021 outcome unavailable**, so excluded from tuning |
-| Final period | Jan 2022–Sep 2026 (57 investment months), model settings fixed, past completed final-period labels may train later forecasts |
-| Portfolio | Top three by predicted probability, equal 1/3 target weights; benchmark six-month momentum top three and passive SPY |
-| Cost | 7.5 bps *per dollar traded*, buy and sell; 0/5/7.5/10/20 bps sensitivity |
-| Metrics | CAGR, monthly annualised volatility, ^IRX-proxy Sharpe, monthly maximum drawdown, turnover, Brier, classification and top-three accuracy, calibration |
+## What we implemented
 
-**Important caveats:** The nine original funds are not the current full eleven-sector GICS universe. Adjusted Open is a total-return accounting construction, not a guaranteed transaction price. The 7.5 bps is an assumed cost, not a measured historical cost. `^IRX` approximates the risk-free rate, but is not an investable total-return asset. Monthly max drawdown misses some intra-month declines. Consecutive months and sectors are correlated, limiting statistical confidence. No favourable result is guaranteed.
+We implemented this approved abstract in the [executed Jupyter notebook](notebooks/Finance_with_ML_CSCI_E278.ipynb). The forest ranked nine sector ETFs each month by their chance of beating SPY, our proxy for the S&P 500. We invested equally in the first three and compared the portfolio with the three strongest six-month momentum sectors and with holding SPY. We selected the model settings using earlier data, refitted the forest each month using completed outcomes, and assessed all three portfolios over the same 57 months after trading costs.
 
-## Checks
+[HTML reading copy](notebooks/Finance_with_ML_CSCI_E278.html) · [The 15 research decisions](PROJECT_DESIGN.md) · [Rubric review](SUBMISSION_CHECKLIST.md)
 
-Run `python -m pytest -q tests/` in a Python environment with `numpy`, `pandas`, `scikit-learn`, and `pytest`. Tests use artificial price histories **only** to check program behaviour; they are separate from the research data and its findings.
+## Findings
 
-## Integrity and sources
+The final test covers 57 investment months, January 2022 through September 2026. All three portfolios used the same opening prices and an assumed cost of 7.5 basis points per dollar bought or sold. The September holding was valued at the October 1 opening.
 
-Original notebook implementation; no copied course slides, notebooks, sample-project code or answer keys are in this repository. The syllabus prohibits publishing course materials without permission. GitHub may be public for **original project work**, but never for restricted class materials. Acknowledge AI-assisted work and independently validate outputs according to the course policy.
+| Strategy | Annual compound return | Final value of $10,000 | Annual volatility | Sharpe | Maximum monthly drawdown |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Random forest | 8.07% | $14,455 | 15.62% | 0.332 | −26.52% |
+| Six-month momentum | 6.18% | $13,293 | 14.89% | 0.220 | −12.20% |
+| SPY buy-and-hold | 11.94% | $17,085 | 15.25% | 0.572 | −23.37% |
 
-## Source control and running from Windows
+The forest overtook momentum in January–September 2026. Its top three picks beat SPY 79 times in 171 selections (46.2%). Picking three sectors at random would have averaged 46.6% over the same months. Its probability forecasts also trailed the past-frequency benchmark on Brier score, 0.2502 versus 0.2494. A lower score is better.
 
-`notebooks/Finance_with_ML_CSCI_E278.ipynb` is the main submission. The standalone source in `sector_backtest.py` generates the notebook through `python build_notebook.py`; if code changes, rebuild and rerun the notebook, then commit both files.
+Paired six-month block-bootstrap intervals included zero for the forest's average monthly return difference against each benchmark and for the top-three hit-rate difference. This sample gives little evidence of a persistent stock-sector selection advantage.
 
-The local project is already initialised as a Git repository and has its `origin` pointing to `https://github.com/schwartzberg/hed_ml_w_finance.git`. The **initial local commit is not yet pushed** to GitHub. From this folder, run `git push -u origin main` after ensuring GitHub authentication is configured. Do not push restricted course materials or personal data.
+## Run locally or in Colab
 
-A real historical run with Yahoo Finance prices, followed by review of the outputs, is **still required** for final submission. This package includes tested program logic, not a verified historical investment result.
+1. Use a Python environment with the packages in `requirements.txt`. For local JupyterLab, open a prompt in `notebooks`, start `python -m jupyterlab`, and open `Finance_with_ML_CSCI_E278.ipynb`. The same notebook can be uploaded directly to Colab.
+2. Run all cells in order. The notebook uses `data/` relative to the kernel's working directory. A normal local launch from `notebooks/` uses `notebooks/data/`. The first run downloads adjusted daily opens and closes for the nine ETFs and SPY and Treasury yield quotes for `^IRX` from Yahoo Finance.
+3. Keep the three CSVs and their manifest together. A rerun verifies their SHA-256 hashes before use. The notebook records the hashes of the reported run in section 2. A later vendor download can differ. The repository contains the executed notebook and aggregate results. The full vendor files stay on the local machine.
+4. From the project root, run `python -m pytest -q tests`. The tests use artificial histories to check forecast timing, the rolling training window, cash accounting, risk measures and snapshot integrity.
+
+The reported run used Python 3.12.14, NumPy 2.5.3, pandas 3.0.5, scikit-learn 1.9.1, Matplotlib 3.11.2 and yfinance 1.8.0. For implementation changes, edit `sector_backtest.py` and `build_notebook.py`. Run `python build_notebook.py` to regenerate the notebook, then execute and save it again. The builder also accepts `--output PATH` for a separate working copy.
+
+The notebook includes method references and an acknowledgement of AI assistance. Course materials and the full market-data snapshots are excluded from the repository.

@@ -4,6 +4,7 @@ Research data must come from an actual Yahoo Finance snapshot; test fixtures
 are allowed in automated tests but must not be included in reported results.
 """
 from pathlib import Path
+from datetime import datetime, timezone
 import hashlib
 import json
 import numpy as np
@@ -54,8 +55,8 @@ def load_prices(folder='data',refresh=False):
             expected=saved.get('sha256',{}).get(file.name)
             if not expected or hashlib.sha256(file.read_bytes()).hexdigest()!=expected:
                 raise RuntimeError(f'Data snapshot integrity check failed for {file.name}')
-        opened,closed=(pd.read_csv(p,index_col=0,parse_dates=True) for p in paths[:2])
-        yield_pct=pd.read_csv(paths[2],index_col=0,parse_dates=True).iloc[:,0]
+        opened,closed=(pd.read_csv(p,index_col=0,parse_dates=True,float_precision='round_trip') for p in paths[:2])
+        yield_pct=pd.read_csv(paths[2],index_col=0,parse_dates=True,float_precision='round_trip').iloc[:,0]
     else:
         import yfinance as yf
         raw=yf.download(list(TICKERS),start='2014-01-01',end='2026-10-10',
@@ -66,10 +67,12 @@ def load_prices(folder='data',refresh=False):
                       auto_adjust=False,interval='1d',progress=False,threads=False)
         if y is None or y.empty: raise RuntimeError('Yahoo 13-week yield download failed')
         yield_pct=_extract(y,'Close',('^IRX',)).iloc[:,0].rename('annual_yield_pct')
+        validate_prices(opened,closed,yield_pct)
         opened.to_csv(paths[0]);closed.to_csv(paths[1]);yield_pct.to_frame().to_csv(paths[2])
         manifest={'source':'Yahoo Finance using yfinance','adjustment':'auto_adjust=True',
                   'download_start':'2014-01-01','download_end_exclusive':'2026-10-10',
                   'yfinance_version':getattr(yf,'__version__','unknown'),
+                  'retrieved_utc':datetime.now(timezone.utc).isoformat(),
                   'tickers':list(TICKERS),'yield_proxy':'^IRX',
                   'sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}}
         (d/'manifest.json').write_text(json.dumps(manifest,indent=2))
@@ -147,7 +150,9 @@ def walkforward(panel,start,end,params,rolling_months=None):
         assert len(current)==9
         signal=current.signal_date.iloc[0]
         train=panel[(panel.exit_date<=signal)&(panel.month<str(p))].copy()
-        if rolling_months is not None: train=train[train.month>=str(p-rolling_months)]
+        if rolling_months is not None:
+            latest_complete = pd.Period(train.month.max(), freq='M')
+            train = train[train.month >= str(latest_complete - rolling_months + 1)]
         assert len(train)>=216 and train.label.nunique()==2
         assert (train.exit_date<=signal).all(), 'Future label leaked into training!'
         forest=RandomForestClassifier(**params,max_features='sqrt',random_state=42,n_jobs=1)
@@ -159,7 +164,8 @@ def walkforward(panel,start,end,params,rolling_months=None):
             forecasts.append(dict(month=str(p),ticker=r.ticker,probability=float(q),
                                   reference_probability=prior,label=int(r.label),
                                   signal_date=signal,entry_date=r.entry_date,exit_date=r.exit_date,
-                                  latest_training_exit=train.exit_date.max()))
+                                  latest_training_exit=train.exit_date.max(),
+                                  training_months=train.month.nunique()))
         importances.append(dict(month=str(p),**dict(zip(FEATURES,forest.feature_importances_))))
     out=pd.DataFrame(forecasts)
     assert out.groupby('month').ticker.nunique().eq(9).all()
@@ -204,8 +210,16 @@ def simulate(panel,choices,bps=7.5,spy=False):
         else:
             assert len(choices[month])==3
             weights.loc[list(choices[month])]=1/3
-        traded=float((weights-before).abs().sum())
-        cost=traded*bps/10000
+        # Fees come out of the same account. Target weights apply to wealth
+        # after fees. Solve fee = rate * sum(abs(target dollars - old dollars))
+        # with all amounts expressed as fractions of pre-trade wealth.
+        fee_rate = bps / 10000
+        assert 0 <= fee_rate < 0.01
+        cost = 0.0
+        for _ in range(8):
+            traded = float(((1 - cost) * weights - before).abs().sum())
+            cost = fee_rate * traded
+        assert abs(cost - fee_rate * float(((1 - cost) * weights - before).abs().sum())) < 1e-14
         rs=(pd.Series({'SPY':data.spy_return.iloc[0]}) if spy
             else data.set_index('ticker').realised.reindex(universe))
         gross=1+float(np.dot(weights,rs))
@@ -219,7 +233,7 @@ def simulate(panel,choices,bps=7.5,spy=False):
                          riskfree=data.riskfree.iloc[0],selected=choices[month]))
     out=pd.DataFrame(rows).set_index('month')
     if spy:
-        assert out.turnover.iloc[0]==1
+        assert np.isclose(out.turnover.iloc[0] + out.cost.iloc[0], 1.)
         assert (out.turnover.iloc[1:]==0).all()
     return out
 
@@ -228,10 +242,11 @@ def metrics(result):
     r=result.return_net
     vol=float(r.std(ddof=1)*np.sqrt(12))
     excess=r-result.riskfree
+    excess_vol=float(excess.std(ddof=1)*np.sqrt(12))
     nav=pd.concat([pd.Series([1.],index=['initial']),result.nav])
     dd=float((nav/nav.cummax()-1).min())
     return dict(CAGR=float(result.nav.iloc[-1]**(12/len(r))-1),
-                volatility=vol,sharpe=float(excess.mean()*12/vol) if vol>0 else float('nan'),
+                volatility=vol,sharpe=float(excess.mean()*12/excess_vol) if excess_vol>0 else float('nan'),
                 max_monthly_drawdown=dd,total_return=float(result.nav.iloc[-1]-1),
                 annual_turnover=float(result.turnover.sum()*12/len(r)))
 

@@ -42,10 +42,10 @@ def test_cost_and_rebalance():
     ch={mo:('XLE','XLF','XLB') for mo in ('2022-01','2022-02','2022-03')}
     a=m.simulate(p,ch,bps=7.5)
     b=m.simulate(p,ch,bps=0)
-    assert np.isclose(a.cost.iloc[0],.00075)
+    assert np.isclose(a.cost.iloc[0], .00075 / 1.00075)
     assert a.nav.iloc[-1]<b.nav.iloc[-1]
     spy=m.simulate(p,{mo:('SPY',) for mo in ch},spy=True)
-    assert spy.turnover.tolist()==[1.,0.,0.]
+    np.testing.assert_allclose(spy.turnover,[1 / 1.00075,0.,0.])
 
 
 def test_full_final_calendar():
@@ -74,7 +74,7 @@ def test_costs_apply_to_actual_rebalancing_turnover():
     op,cl,y=sample(); panel=m.make_panel(op,cl,y)
     held={str(mo):('XLB','XLE','XLF') for mo in pd.period_range('2022-01','2022-06',freq='M')}
     result=m.simulate(panel,held,bps=7.5)
-    assert result.turnover.iloc[0]==1
+    assert np.isclose(result.turnover.iloc[0] + result.cost.iloc[0], 1.)
     assert (result.turnover.iloc[1:]>0).all(), 'Rebalancing costs apply even if names unchanged'
     np.testing.assert_allclose(result.cost,result.turnover*7.5/10000)
     assert m.simulate(panel,held,bps=0).cost.eq(0).all()
@@ -120,3 +120,19 @@ def test_cache_manifest_rejects_tampering(tmp_path):
     import pytest
     with pytest.raises(RuntimeError,match='integrity'):
         m.load_prices(tmp_path)
+
+
+def test_rolling_window_counts_completed_months():
+    panel = m.make_panel(*sample())
+    pred, _ = m.walkforward(panel, '2019-01', '2019-02', m.CANDIDATES['small_100'], rolling_months=48)
+    assert pred.groupby('month').training_months.first().tolist() == [47, 48]
+    assert (pred.latest_training_exit <= pred.signal_date).all()
+
+
+def test_sharpe_uses_excess_return_volatility():
+    returns = pd.Series([.02, -.01, .01])
+    rf = pd.Series([.001, .003, .002])
+    result = pd.DataFrame({'return_net': returns, 'riskfree': rf,
+                           'nav': (1 + returns).cumprod(), 'turnover': 0.})
+    expected = (returns - rf).mean() / (returns - rf).std() * np.sqrt(12)
+    assert np.isclose(m.metrics(result)['sharpe'], expected)
