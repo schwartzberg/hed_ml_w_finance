@@ -281,8 +281,8 @@ def audit(panel,pred):
 def block_bootstrap_ci(monthly_differences, block_months=6, draws=2000, seed=2026):
     """Circular block-bootstrap CI for a time-ordered monthly mean difference.
 
-    We resample contiguous months, not individual ETF observations. This is
-    an uncertainty diagnostic, not a formal guarantee of future performance.
+    We resample contiguous months, rather than individual ETF observations. This is
+    an uncertainty diagnostic, rather than a formal guarantee of future performance.
     """
     x=np.asarray(monthly_differences,dtype=float)
     assert x.ndim==1 and len(x)>=24 and np.isfinite(x).all()

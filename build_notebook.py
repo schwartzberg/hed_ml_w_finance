@@ -39,7 +39,7 @@ The model produces a signal **after the last trading day's close** of a month. I
 The final September 2026 holding is valued using the first market opening in **October 2026**. No October observation is used to predict September's holdings.''')
 md('''## 2. Data and reproducibility
 
-Daily Yahoo Finance **dividend- and split-adjusted Open and Close** are used. We download data from January 2014. `auto_adjust=True` is stated explicitly so a change in `yfinance` defaults cannot silently change our analysis. We use adjusted opening prices to calculate total returns. Actual execution prices can differ. We approximate trading costs with a fixed charge. The 13-week Treasury quote, `^IRX`, is an imperfect **risk-free-rate proxy**, not a tradable portfolio return.
+Daily Yahoo Finance **dividend- and split-adjusted Open and Close** are used. We download data from January 2014. `auto_adjust=True` is stated explicitly so a change in `yfinance` defaults cannot silently change our analysis. We use adjusted opening prices to calculate total returns. Actual execution prices can differ. We approximate trading costs with a fixed charge. The 13-week Treasury quote, `^IRX`, is an imperfect **risk-free-rate proxy**, rather than a tradable portfolio return.
 
 This cell requires internet access on first execution. It writes a reproducible price snapshot to local `data/`. Rerunning with the same snapshot avoids market-vendor revisions. If downloading fails, execution stops: **we do not substitute synthetic returns**.''')
 code('''# Colab bootstrap. With a verified local price snapshot, no network is needed.
@@ -70,7 +70,7 @@ md('''## 3. Six features and the prediction target
 
 At the **prior month-end close**, we calculate each sector's returns over 1, 3 and 6 calendar months. The other three features are the annualised volatility of its last 63 daily returns, its distance from its 200-trading-day moving average and its 3-month return relative to SPY.
 
-The label is **1** when the sector's upcoming first-open-to-first-open return exceeds SPY's over the same dates. Otherwise the label is **0**. This relative-performance label can be 1 even when the sector loses money. Each month contains nine related observations, not nine independent market regimes.''')
+The label is **1** when the sector's upcoming first-open-to-first-open return exceeds SPY's over the same dates. Otherwise the label is **0**. This relative-performance label can be 1 even when the sector loses money. Each month contains nine related observations, rather than nine independent market regimes.''')
 code('''panel=make_panel(open_px,close_px,yield_pct)
 print('Complete rows:',len(panel),'months:',panel.month.nunique())
 assert len(panel)==1269 and panel.month.nunique()==141
@@ -153,7 +153,7 @@ md('''SPY finished with the most wealth and the highest Sharpe ratio. Momentum h
 
 ## 8. Does the forest actually predict better?
 
-The Brier score measures probability quality, not investment profit and not ranking quality. We also report the **top-three hit rate** (share of selected sector-months that outperform SPY), compare it with the expected rate of choosing three of the nine sectors at random, and inspect **calibration** in five probability bins. The random baseline is a *diagnostic*, not an investable trading strategy.''')
+The Brier score measures the accuracy of the predicted probabilities, rather than portfolio profits or the quality of the sector rankings. We also report the **top-three hit rate** (share of selected sector-months that outperform SPY), compare it with the expected rate of choosing three of the nine sectors at random, and inspect **calibration** in five probability bins. The random baseline is a *diagnostic*, rather than an investable trading strategy.''')
 code('''quality,calibration=forecast_diagnostics(final_forecasts)
 quality['brier_skill_vs_historical_frequency']=1-quality['brier']/quality['naive_brier']
 display(pd.DataFrame([quality],index=['Final test']).round(4))
@@ -237,7 +237,7 @@ For a $10,000 initial investment, the ending values in dollars were **14,455** f
 
 Our nine fixed ETFs do not cover the modern full eleven-sector SPDR universe. Historical GICS classification changes affect comparisons. ETFs remain diversified and liquid, but first-open prices need not match an actual order's fill. Dividend-adjusted prices approximate reinvestment. We do not estimate spreads, taxes, market impact or commissions separately. The 7.5-bps transaction cost is only an assumption, tested at alternatives. The `^IRX` quoted yield is an approximation to a risk-free monthly rate. Drawdowns sampled monthly understate some intramonth pain. Market conditions, selected thresholds and the relatively small number of independent months limit confidence. The project tests whether the strategy added value during the historical test period.
 
-**Reproduce and validate.** Run every notebook cell in order, retain the downloaded `data` snapshot and its SHA-256 manifest, and run the accompanying `pytest` tests. Examine errors and any outliers rather than silently deleting dates. Do not interpret charts until the data and timing assertions pass. The unit tests use synthetic fixtures *only* to test code behaviour, never to report an empirical result.
+**Reproduce and validate.** Run every notebook cell in order, retain the downloaded `data` snapshot and its SHA-256 manifest, and run the accompanying `pytest` tests. Examine errors and any outliers rather than silently deleting dates. Do not interpret charts until the data and timing assertions pass. The unit tests use synthetic fixtures to test code behaviour, rather than to generate the reported investment results.
 
 **Sources.** Course sources include the CSCI E-278 Fall 2026 syllabus, the notes for Modules I–IV and lecture notebooks on walk-forward testing, random forests and portfolio risk. We also used Yahoo Finance historical data, the `yfinance` price-adjustment documentation and the scikit-learn documentation for `RandomForestClassifier` and `brier_score_loss`. The final-project sample was reviewed for expected notebook presentation and was not copied.
 

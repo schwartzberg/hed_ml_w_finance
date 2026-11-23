@@ -11,12 +11,12 @@ The following choices were agreed before reviewing real historical test results.
 5. **Prediction:** Binary outcome: a sector's next investment month's first-opening-to-first-opening total return exceeds SPY's return over the same dates. The model predicts a probability for each sector.
 6. **Portfolio:** Buy the three highest-probability sectors, regardless of whether their probabilities exceed 50%, and target equal 1/3 weights at monthly openings.
 7. **Comparisons:** Equal-weight top-three six-month momentum and passive SPY buy-and-hold, over exactly the same holding periods.
-8. **Costs:** Assumed 7.5 basis points *per dollar bought or sold*, including every rebalance. Test 0, 5, 7.5, 10 and 20 basis points. This is a scenario assumption, **not** a validated historical cost.
+8. **Costs:** Assumed 7.5 basis points *per dollar bought or sold*, including every rebalance. Test 0, 5, 7.5, 10 and 20 basis points. This is a scenario assumption, rather than a validated historical cost.
 9. **Training window:** Refit the model each month using an expanding window. During validation, compare it with a four-year rolling window.
-10. **Model tuning:** Four predefined modest random forests. Choose by lowest walk-forward Brier score in the pre-final validation window, not by the best realised portfolio profits.
+10. **Model tuning:** Four predefined modest random forests. Choose by lowest walk-forward Brier score in the pre-final validation window, rather than by the highest realised portfolio profit.
 11. **Validation:** Investment months January 2019–November 2021. The December 2021 holding outcome is not available by December 2021's signal and must not inform model selection.
 12. **Final test:** January 2022–September 2026 (57 investment months). Freeze the model and selection policy before this test. Earlier **completed** test-period labels may train later walk-forward models. Keep the original hyperparameters fixed throughout the final test.
-13. **Forecast timing:** Use the final market close of the preceding month to form each month's features. Place the hypothetical trade at the next session's opening. Adjusted openings are accounting constructions, not guaranteed execution prices.
+13. **Forecast timing:** Use the final market close of the preceding month to form each month's features. Place the hypothetical trade at the next session's opening. Adjusted openings are accounting constructions, rather than guaranteed execution prices.
 14. **No future outcomes:** A training label may be used only if its holding-period exit opening has occurred **by the forecast's signal close**. The tests check this timing.
 15. **Evaluation:** Report CAGR, monthly annualised volatility, risk-free proxy Sharpe, monthly maximum drawdown, turnover, Brier score vs historical-frequency baseline, top-three hit-rate and probability calibration. Inspect different market environments and distinguish predictive skill from realised returns.
 
