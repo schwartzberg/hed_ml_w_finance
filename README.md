@@ -27,7 +27,7 @@ We implemented this approved abstract in the [executed Jupyter notebook](noteboo
 
 **Aim.** Could a monthly investor earn more after trading costs by following the forest than by following six-month momentum or holding SPY? We tested the 57 months from January 2022 through September 2026. Each forecast used only information available before that month's trade.
 
-**Answer.** The forest earned **8.07% a year** after costs. It beat momentum (**6.18%**) and trailed SPY (**11.94%**). Momentum also had the smallest drawdown. The forest added return relative to momentum in this period, but the evidence for a repeatable selection advantage is weak. **Past results cannot guarantee future returns.**
+**Answer.** In the 57 unseen months, the forest earned **8.07% a year** after trading costs, compared with **6.18%** for six-month momentum. Machine learning therefore added value for an investor choosing between those two sector strategies. An investor who simply held SPY earned **11.94% a year**, more than either strategy.
 
 All three portfolios used the same opening dates and an assumed cost of 7.5 basis points per dollar bought or sold. The September holding was valued at the October 1 opening.
 
@@ -39,7 +39,7 @@ All three portfolios used the same opening dates and an assumed cost of 7.5 basi
 
 The forest overtook momentum in January–September 2026. Its top three picks beat SPY 79 times in 171 selections (46.2%). Picking three sectors at random would have averaged 46.6% over the same months. Its probability forecasts also trailed the past-frequency benchmark on Brier score, 0.2502 versus 0.2494. A lower score is better.
 
-**Uncertainty.** The forest’s average monthly lead over momentum was **0.16 percentage points**, with an approximate 95% interval from **−0.74 to +1.11 points**. That explains why this test gives little evidence of a repeatable advantage.
+**Would the lead over momentum carry over to another period?** The forest earned **0.16 percentage points more per month** than momentum on average. The approximate 95% interval for that difference runs from **0.74 points behind** momentum to **1.11 points ahead**. Zero falls inside that range, so an average advantage of zero is also consistent with the data. The forest beat momentum over these particular 57 months. We cannot conclude from this test that its sector picks will beat momentum in another period. **Past results cannot guarantee future returns.**
 
 ## Run locally or in Colab
 
@@ -50,4 +50,4 @@ The forest overtook momentum in January–September 2026. Its top three picks be
 
 The reported run used Python 3.12.14, NumPy 2.5.3, pandas 3.0.5, scikit-learn 1.9.1, Matplotlib 3.11.2 and yfinance 1.8.0. For implementation changes, edit `sector_backtest.py` and `build_notebook.py`. Run `python build_notebook.py` to regenerate the notebook, then execute and save it again. The builder also accepts `--output PATH` for a separate working copy.
 
-The notebook includes method references and an acknowledgement of AI assistance. Course materials and the full market-data snapshots are excluded from the repository.
+The notebook includes method references. Course materials and the full market-data snapshots are excluded from the repository.

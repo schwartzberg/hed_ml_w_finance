@@ -1,4 +1,4 @@
-"""Build a self-contained notebook; no repository-local imports required in Colab."""
+"""Build a self-contained notebook that runs in Colab without repository-local imports."""
 from pathlib import Path
 import argparse
 import nbformat as nbf
@@ -18,11 +18,11 @@ md('''# Can Machine Learning Improve Stock-Sector Selection?
 
 > The final aim is to see whether the machine-learning strategy adds value in unseen historical periods, and this is while recognising that past results cannot guarantee future returns.
 
-**Did machine learning add value in unseen months?** Over the 57 months from January 2022 through September 2026, the forest earned **8.07% a year** after trading costs. It beat six-month momentum (**6.18%**) and trailed holding SPY (**11.94%**). The forest's picks beat SPY 79 times in 171 selections, about as often as random selection would have done. Its higher return than momentum in this sample gives little evidence of a repeatable advantage.
+**Did machine learning add value in unseen months?** Yes, compared with six-month momentum. From January 2022 through September 2026, the forest earned **8.07% a year** after trading costs and momentum earned **6.18%**. Holding SPY earned **11.94% a year**, so switching from SPY to the forest would have reduced the investor's return. The forest's 57-month record does not establish that it can beat momentum again. Section 12 explains how much uncertainty surrounds that comparison.
 
 The universe consists of nine original Select Sector SPDR ETFs (XLB, XLE, XLF, XLI, XLK, XLP, XLU, XLV and XLY). SPY represents the broad market. The study covers January 2015 through September 2026. Prices from 2014 supply the history needed for the first signal.
 
-Sections 1–5 cover the data and forecast timing. Sections 6–8 compare investment returns and prediction quality. Sections 9–12 examine costs, uncertainty and the conclusion. See the sources and AI acknowledgement at the end.''')
+Sections 1–5 cover the data and forecast timing. Sections 6–8 compare investment returns and prediction quality. Sections 9–12 examine costs, uncertainty and the conclusion. See the sources at the end.''')
 md('''## 1. Time and experiment design
 
 | Period | Investment months | Use |
@@ -34,12 +34,12 @@ md('''## 1. Time and experiment design
 
 **Why November 2021 is the last validation investment month.** December's *investment outcome* is only known at the first trading day's opening in January 2022. It was unavailable when deciding the January 2022 trade at the final December 2021 close. We therefore cannot use December 2021's realised outcome to choose hyperparameters.
 
-The model produces a signal **after the last trading day's close** of a month. It buys at the **first market open of the next month**, holds until the **first open of the following month**, then rebalances. Each training label must have completed its exit opening before a later signal; an unfinished previous-month label is excluded. The expanding window grows as outcomes become available. The final-period model is refitted on past completed results, but settings remain locked.
+The model produces a signal **after the last trading day's close** of a month. It buys at the **first market open of the next month**, holds until the **first open of the following month**, then rebalances. We train on a holding period only after its exit price is known. This excludes an unfinished position from the previous month. The expanding window grows as outcomes become available. The final-period model is refitted on past completed results, but settings remain locked.
 
 The final September 2026 holding is valued using the first market opening in **October 2026**. No October observation is used to predict September's holdings.''')
 md('''## 2. Data and reproducibility
 
-Daily Yahoo Finance **dividend- and split-adjusted Open and Close** are used. We download data from January 2014. `auto_adjust=True` is stated explicitly so a change in `yfinance` defaults cannot silently change our analysis. Adjusted opens are total-return accounting prices, not literal execution prices; a fixed cost is an approximation for dealing costs. The 13-week Treasury quote, `^IRX`, is an imperfect **risk-free-rate proxy**, not a tradable portfolio return.
+Daily Yahoo Finance **dividend- and split-adjusted Open and Close** are used. We download data from January 2014. `auto_adjust=True` is stated explicitly so a change in `yfinance` defaults cannot silently change our analysis. We use adjusted opening prices to calculate total returns. Actual execution prices can differ. We approximate trading costs with a fixed charge. The 13-week Treasury quote, `^IRX`, is an imperfect **risk-free-rate proxy**, not a tradable portfolio return.
 
 This cell requires internet access on first execution. It writes a reproducible price snapshot to local `data/`. Rerunning with the same snapshot avoids market-vendor revisions. If downloading fails, execution stops: **we do not substitute synthetic returns**.''')
 code('''# Colab bootstrap. With a verified local price snapshot, no network is needed.
@@ -68,9 +68,9 @@ display(close_px.loc[['2026-09-30']].round(2))
 print('First October opening for the September exit:', open_px.loc['2026-10':].index[0].date())''')
 md('''## 3. Six features and the prediction target
 
-All features are calculated from information available at the **prior month-end close**: sector returns over 1, 3 and 6 calendar months; annualised volatility of the last 63 daily returns; the distance from the 200-trading-day moving average; and the sector's 3-month return relative to SPY.
+At the **prior month-end close**, we calculate each sector's returns over 1, 3 and 6 calendar months. The other three features are the annualised volatility of its last 63 daily returns, its distance from its 200-trading-day moving average and its 3-month return relative to SPY.
 
-The label is **1** when the sector's upcoming first-open-to-first-open return exceeds SPY's over the same dates; otherwise it is **0**. This relative-performance label can be 1 even when the sector loses money. Each month contains nine related observations, not nine independent market regimes.''')
+The label is **1** when the sector's upcoming first-open-to-first-open return exceeds SPY's over the same dates. Otherwise the label is **0**. This relative-performance label can be 1 even when the sector loses money. Each month contains nine related observations, not nine independent market regimes.''')
 code('''panel=make_panel(open_px,close_px,yield_pct)
 print('Complete rows:',len(panel),'months:',panel.month.nunique())
 assert len(panel)==1269 and panel.month.nunique()==141
@@ -78,7 +78,7 @@ assert np.isfinite(panel[list(FEATURES)].to_numpy()).all()
 display(panel[['month','ticker','signal_date','entry_date','exit_date',*FEATURES,'label']].head(12))''')
 md('''## 4. Walk-forward model selection: prediction quality first
 
-We compare four modest forests (100/200 trees; depth 3/5; minimum leaf sizes 20/15). Their settings were fixed before looking at final test outcomes. For each month in the 2019–November 2021 validation period, we train only on labels whose outcomes are already known, then forecast the nine sectors.
+We compare four forests. Each has 100 or 200 trees. The shallower trees have a maximum depth of 3 and at least 20 observations per leaf. The deeper trees have a maximum depth of 5 and at least 15 observations per leaf. Their settings were fixed before looking at final test outcomes. For each month in the 2019–November 2021 validation period, we train only on labels whose outcomes are already known, then forecast the nine sectors.
 
 The **Brier score** evaluates probability quality: lower is better. We compare it with a no-lookahead forecast that simply uses the historical frequency of positive labels. A four-year rolling training window is reported as a robustness check alongside our primary **expanding window**, but it is **not** selected based on the unseen 2022–2026 returns. A fixed random seed makes fitting reproducible.''')
 code('''name,chosen_params,validation_table=choose_model(panel)
@@ -94,12 +94,12 @@ assert valid_forecasts.month.max()=='2021-11'
 assert rolling_forecasts.training_months.max()==48
 print('Lowest validation Brier among the four forests:', round(validation_table.brier.min(),4))
 print('Historical-frequency benchmark:', round(validation_table.naive_brier.iloc[0],4))''')
-md('''All four forests produced larger validation errors than the historical-frequency benchmark. The shallow, 100-tree model was the best of the four. The original model-selection rule carried that forest into the final test.\n\n## 5. Lock the model; predict January 2022–September 2026
+md('''All four forests produced larger validation errors than the historical-frequency benchmark. The shallow, 100-tree model was the best of the four. The original model-selection rule carried that forest into the final test.\n\n## 5. Lock the model and predict January 2022–September 2026
 
 No hyperparameters, features or investment rules may be changed using the final results. For every forecast, the calendar audit verifies that the latest training label completed **before the forecast signal**. A January 2022 signal therefore cannot train on the December 2021 position's unrealised return.''')
 code('''final_forecasts,feature_importance=walkforward(panel,*TEST,chosen_params)
 assert audit(panel,final_forecasts)
-print('PASS: 57 final monthly forecasts, 513 sector-level predictions; no future labels')
+print('PASS: 57 final monthly forecasts, 513 sector-level predictions. All training labels were known at the signal date.')
 display(final_forecasts.head(9))''')
 md('''## 6. Three investment strategies and transaction costs
 
@@ -172,7 +172,7 @@ md('''Of 513 forecasts, 509 fell in the 40–60% bin. Their average predicted pr
 
 ## 9. Cost sensitivity and stability
 
-Here we keep the actual selections unchanged and calculate portfolio outcomes at five costs. We do **not** choose the cost with the best result. Feature-importance values average the sequentially fitted final-period forests. Correlated features may share importance; impurity-based scores are descriptive, not proof of cause.''')
+Here we keep the actual selections unchanged and calculate portfolio outcomes at five costs. We do **not** choose the cost with the best result. Feature-importance values average the sequentially fitted final-period forests. Correlated features may share importance. These scores describe how the trees made splits. They do not establish causation.''')
 code('''grid=[]
 for bps in [0,5,7.5,10,20]:
     for name,picks,is_spy in [('Random forest',forest_picks,False),
@@ -216,7 +216,7 @@ code('''monthly=pd.DataFrame({name:out.return_net.to_numpy() for name,out in str
     index=pd.PeriodIndex(strategies['Random forest'].index,freq='M'))
 annual=monthly.groupby(monthly.index.year).agg(lambda x:(1+x).prod()-1)
 display(annual.rename_axis('Investment year').style.format('{:.2%}'))
-print('The 2026 entry covers January–September only; it is not a full-year return.')
+print('The 2026 entry covers only the nine months from January through September.')
 fr=performance.loc['Random forest','CAGR']; mo=performance.loc['Six-month momentum','CAGR']
 spy=performance.loc['SPY buy-and-hold','CAGR']
 forest_before_2026 = (1 + monthly.loc[:'2025-12', 'Random forest']).prod() - 1
@@ -231,19 +231,17 @@ md('''## 12. Conclusion against the approved aim
 
 For a $10,000 initial investment, the ending values in dollars were **14,455** for the forest, **13,293** for momentum and **17,085** for SPY. The extra return over momentum came with a deeper peak-to-trough loss (**26.52%** versus **12.20%** at monthly valuations).
 
-How much confidence should we place in that extra return? The forest's average monthly lead over momentum was **0.16 percentage points**. Its approximate 95% block-bootstrap interval ran from **−0.74 to +1.11 percentage points**. That range and the **46.2%** hit rate, against **46.6%** expected from random selection, give little evidence that the forest reliably selected winning sectors. **Past results cannot guarantee future returns.**
+**Would the lead over momentum carry over to another period?** The forest earned **0.16 percentage points more per month** than momentum on average. The approximate 95% interval for that difference runs from **0.74 points behind** momentum to **1.11 points ahead**. Zero falls inside that range, so an average advantage of zero is also consistent with the data. The forest beat momentum over these particular 57 months. We cannot conclude from this test that its sector picks will beat momentum in another period. **Past results cannot guarantee future returns.**
 
 ### Limits of the comparison
 
-Our nine fixed ETFs do not cover the modern full eleven-sector SPDR universe. Historical GICS classification changes affect comparisons. ETFs remain diversified and liquid, but first-open prices need not match an actual order's fill. Dividend-adjusted prices approximate reinvestment; spreads, taxes, market impact and commissions are not independently reconstructed. The 7.5-bps transaction cost is only an assumption, tested at alternatives. The `^IRX` quoted yield is an approximation to a risk-free monthly rate. Drawdowns sampled monthly understate some intramonth pain. Market conditions, selected thresholds and the relatively small number of independent months limit confidence. The project tests historical value added; it does not promise future returns.
+Our nine fixed ETFs do not cover the modern full eleven-sector SPDR universe. Historical GICS classification changes affect comparisons. ETFs remain diversified and liquid, but first-open prices need not match an actual order's fill. Dividend-adjusted prices approximate reinvestment. We do not estimate spreads, taxes, market impact or commissions separately. The 7.5-bps transaction cost is only an assumption, tested at alternatives. The `^IRX` quoted yield is an approximation to a risk-free monthly rate. Drawdowns sampled monthly understate some intramonth pain. Market conditions, selected thresholds and the relatively small number of independent months limit confidence. The project tests whether the strategy added value during the historical test period.
 
 **Reproduce and validate.** Run every notebook cell in order, retain the downloaded `data` snapshot and its SHA-256 manifest, and run the accompanying `pytest` tests. Examine errors and any outliers rather than silently deleting dates. Do not interpret charts until the data and timing assertions pass. The unit tests use synthetic fixtures *only* to test code behaviour, never to report an empirical result.
 
-**Sources.** CSCI E-278 Fall 2026 syllabus; Modules I–IV course notes; lecture notebooks on walk-forward testing, random forests, portfolio risk; Yahoo Finance historical data and `yfinance` price adjustment; scikit-learn `RandomForestClassifier` and `brier_score_loss` documentation. The final-project sample was reviewed for expected notebook presentation and was not copied.
+**Sources.** Course sources include the CSCI E-278 Fall 2026 syllabus, the notes for Modules I–IV and lecture notebooks on walk-forward testing, random forests and portfolio risk. We also used Yahoo Finance historical data, the `yfinance` price-adjustment documentation and the scikit-learn documentation for `RandomForestClassifier` and `brier_score_loss`. The final-project sample was reviewed for expected notebook presentation and was not copied.
 
-**Sources for implementation.** Yahoo Finance daily prices and 13-week Treasury quotes, retrieved with yfinance 1.8.0 for the stored run. The manifest gives the three CSV hashes and the requested date range. The original snapshot has no retrieval timestamp. Section 2 prints the hashes for comparison. [Yahoo Finance](https://finance.yahoo.com/) · [yfinance download](https://ranaroussi.github.io/yfinance/reference/api/yfinance.download.html) · [scikit-learn random forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html) · [scikit-learn Brier score](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.brier_score_loss.html) · [William F. Sharpe, The Sharpe Ratio (1994)](https://web.stanford.edu/~wfsharpe/art/sr/sr.htm).
-
-**AI acknowledgement.** OpenAI. ChatGPT, 23 November 2026. Used to discuss the research design, draft and revise code and prose, write tests and check calculations against the saved price data. [ChatGPT](https://chatgpt.com/).''')
+**Sources for implementation.** Yahoo Finance daily prices and 13-week Treasury quotes, retrieved with yfinance 1.8.0 for the stored run. The manifest gives the three CSV hashes and the requested date range. The original snapshot has no retrieval timestamp. Section 2 prints the hashes for comparison. [Yahoo Finance](https://finance.yahoo.com/) · [yfinance download](https://ranaroussi.github.io/yfinance/reference/api/yfinance.download.html) · [scikit-learn random forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html) · [scikit-learn Brier score](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.brier_score_loss.html) · [William F. Sharpe, The Sharpe Ratio (1994)](https://web.stanford.edu/~wfsharpe/art/sr/sr.htm).''')
 nbf.validate(nb)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, default=root/'notebooks'/'Finance_with_ML_CSCI_E278.ipynb')

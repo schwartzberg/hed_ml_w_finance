@@ -1,6 +1,6 @@
 """Original, time-aligned CSCI E-278 sector ETF experiment.
 
-Research data must come from an actual Yahoo Finance snapshot; test fixtures
+Research data must come from an actual Yahoo Finance snapshot. Test fixtures
 are allowed in automated tests but must not be included in reported results.
 """
 from pathlib import Path
@@ -42,14 +42,14 @@ def _extract(raw, field, tickers):
 
 
 def load_prices(folder='data',refresh=False):
-    """Use saved snapshots when present; no fabricated replacement data."""
+    """Use a saved snapshot when available and real vendor data for a fresh download."""
     d=Path(folder); d.mkdir(parents=True,exist_ok=True)
     paths=[d/'adjusted_open.csv',d/'adjusted_close.csv',d/'treasury_yield.csv']
     if all(p.exists() for p in paths) and not refresh:
         # Refuse silently altered snapshots rather than mixing vendor revisions.
         manifest_file=d/'manifest.json'
         if not manifest_file.exists():
-            raise RuntimeError('Existing CSV snapshot lacks its SHA-256 manifest; remove it and refresh data')
+            raise RuntimeError('Existing CSV snapshot lacks its SHA-256 manifest. Remove the incomplete snapshot and refresh the data.')
         saved=json.loads(manifest_file.read_text(encoding='utf-8'))
         for file in paths:
             expected=saved.get('sha256',{}).get(file.name)
@@ -97,7 +97,7 @@ def validate_prices(opened,closed,yields):
     assert yields.loc[:'2026-09-30'].notna().any(), 'Missing risk-free-rate data'
     # Flag suspect outliers for inspection without assuming all crises are errors.
     jumps=closed[list(TICKERS)].pct_change().abs().max().max()
-    assert jumps < 0.5, 'Price jump >50%; inspect corporate action adjustment'
+    assert jumps < 0.5, 'Price jump >50%. Inspect the corporate action adjustment.'
 
 
 def make_panel(opened,closed,yields):

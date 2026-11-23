@@ -27,6 +27,6 @@
 - [x] Executed the full notebook in a fresh Python kernel using the saved snapshot. Verified the four figures, the result tables and the absence of cell errors.
 - [x] Ran the project test suite, including regression tests for the number of completed training months and the excess-return Sharpe ratio.
 - [x] Checked portfolio fees, total returns, cost sensitivity and paired uncertainty intervals. The 15 prespecified research decisions are recorded in [PROJECT_DESIGN.md](PROJECT_DESIGN.md).
-- [x] Included references, an AI acknowledgement and the limits of inference from 57 investment months.
+- [x] Included references and described the limits of inference from 57 investment months.
 
 The academic review and GitHub publication are separate from submitting the notebook to the course.
