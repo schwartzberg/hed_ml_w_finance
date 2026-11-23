@@ -39,7 +39,7 @@ All three portfolios used the same opening dates and an assumed cost of 7.5 basi
 
 The forest overtook momentum in January–September 2026. Its top three picks beat SPY 79 times in 171 selections (46.2%). Picking three sectors at random would have averaged 46.6% over the same months. Its probability forecasts also trailed the past-frequency benchmark on Brier score, 0.2502 versus 0.2494. A lower score is better.
 
-The forest's average monthly return advantage over momentum was 0.16 percentage points. The approximate 95% interval ranged from −0.74 to +1.11 percentage points using six-month blocks of observations. Both a loss and a gain relative to momentum are consistent with this sample.
+**Uncertainty.** The forest’s average monthly lead over momentum was **0.16 percentage points**, with an approximate 95% interval from **−0.74 to +1.11 points**. That explains why this test gives little evidence of a repeatable advantage.
 
 ## Run locally or in Colab
 
