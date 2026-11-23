@@ -25,9 +25,11 @@ We implemented this approved abstract in the [executed Jupyter notebook](noteboo
 
 ## Did machine learning add value in unseen months?
 
-**Aim.** Could a monthly investor earn more after trading costs by following the forest than by following six-month momentum or holding SPY? We tested the 57 months from January 2022 through September 2026. Each forecast used only information available before that month's trade.
+Here, “unseen” means that each month's outcome was still unknown when the model chose its sectors.
 
-**Answer.** In the 57 unseen months, the forest earned **8.07% a year** after trading costs, compared with **6.18%** for six-month momentum. Machine learning therefore added value for an investor choosing between those two sector strategies. An investor who simply held SPY earned **11.94% a year**, more than either strategy.
+**Did the forest earn more during the 57-month test?** It beat six-month momentum and trailed SPY. From January 2022 through September 2026, the forest earned **8.07% a year** after trading costs, compared with **6.18%** for momentum and **11.94%** for holding SPY.
+
+**Would the forest beat momentum again?** The outcome in another period is unknown. The forest beat momentum in this test, but a repeatable advantage remains unproven.
 
 All three portfolios used the same opening dates and an assumed cost of 7.5 basis points per dollar bought or sold. The September holding was valued at the October 1 opening.
 
@@ -39,7 +41,7 @@ All three portfolios used the same opening dates and an assumed cost of 7.5 basi
 
 The forest overtook momentum in January–September 2026. Its top three picks beat SPY 79 times in 171 selections (46.2%). Picking three sectors at random would have averaged 46.6% over the same months. Its probability forecasts also trailed the past-frequency benchmark on Brier score, 0.2502 versus 0.2494. A lower score is better.
 
-**Would the lead over momentum carry over to another period?** The forest earned **0.16 percentage points more per month** than momentum on average. The approximate 95% interval for that difference runs from **0.74 points behind** momentum to **1.11 points ahead**. Zero falls inside that range, so an average advantage of zero is also consistent with the data. The forest beat momentum over these particular 57 months. We cannot conclude from this test that its sector picks will beat momentum in another period. **Past results cannot guarantee future returns.**
+**Does this test establish that the forest can reliably beat momentum?** No. The forest earned **0.16 percentage points more per month** than momentum on average. The approximate 95% interval for the average monthly difference runs from **0.74 percentage points behind** momentum to **1.11 points ahead**. That interval includes a lead for momentum, a tie and a lead for the forest. It measures uncertainty about the average return difference. We did not estimate the probability of beating momentum in a new period, so there is no basis here for calling the odds 50–50. **Past results cannot guarantee future returns.**
 
 ## Run locally or in Colab
 
