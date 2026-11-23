@@ -23,9 +23,13 @@ We implemented this approved abstract in the [executed Jupyter notebook](noteboo
 
 [HTML reading copy](notebooks/Finance_with_ML_CSCI_E278.html) · [The 15 research decisions](PROJECT_DESIGN.md) · [Rubric review](SUBMISSION_CHECKLIST.md)
 
-## Findings
+## Did machine learning add value in unseen months?
 
-The final test covers 57 investment months, January 2022 through September 2026. All three portfolios used the same opening prices and an assumed cost of 7.5 basis points per dollar bought or sold. The September holding was valued at the October 1 opening.
+**Aim.** Could a monthly investor earn more after trading costs by following the forest than by following six-month momentum or holding SPY? We tested the 57 months from January 2022 through September 2026. Each forecast used only information available before that month's trade.
+
+**Answer.** The forest earned **8.07% a year** after costs. It beat momentum (**6.18%**) and trailed SPY (**11.94%**). Momentum also had the smallest drawdown. The forest added return relative to momentum in this period, but the evidence for a repeatable selection advantage is weak. **Past results cannot guarantee future returns.**
+
+All three portfolios used the same opening dates and an assumed cost of 7.5 basis points per dollar bought or sold. The September holding was valued at the October 1 opening.
 
 | Strategy | Annual compound return | Final value of $10,000 | Annual volatility | Sharpe | Maximum monthly drawdown |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -35,7 +39,7 @@ The final test covers 57 investment months, January 2022 through September 2026.
 
 The forest overtook momentum in January–September 2026. Its top three picks beat SPY 79 times in 171 selections (46.2%). Picking three sectors at random would have averaged 46.6% over the same months. Its probability forecasts also trailed the past-frequency benchmark on Brier score, 0.2502 versus 0.2494. A lower score is better.
 
-Paired six-month block-bootstrap intervals included zero for the forest's average monthly return difference against each benchmark and for the top-three hit-rate difference. This sample gives little evidence of a persistent stock-sector selection advantage.
+The forest's average monthly return advantage over momentum was 0.16 percentage points. The approximate 95% interval ranged from −0.74 to +1.11 percentage points using six-month blocks of observations. Both a loss and a gain relative to momentum are consistent with this sample.
 
 ## Run locally or in Colab
 

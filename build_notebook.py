@@ -14,9 +14,11 @@ md('''# Can Machine Learning Improve Stock-Sector Selection?
 
 **CSCI E-278 — Applied Quantitative Finance and Machine Learning | Final project**
 
-**Research question.** Can a random forest select the three US stock-market sectors most likely to outperform SPY in the next month, more successfully than six-month momentum or simply holding SPY?
+**Approved aim**
 
-**Result on the saved Yahoo Finance snapshot.** The forest earned 8.07% a year after costs. The momentum rule earned 6.18% and SPY earned 11.94%. The forest picked a winning sector 79 times in 171 attempts. The 57-month test gives little evidence that it can consistently identify next month's winners.
+> The final aim is to see whether the machine-learning strategy adds value in unseen historical periods, and this is while recognising that past results cannot guarantee future returns.
+
+**Did machine learning add value in unseen months?** Over the 57 months from January 2022 through September 2026, the forest earned **8.07% a year** after trading costs. It beat six-month momentum (**6.18%**) and trailed holding SPY (**11.94%**). The forest's picks beat SPY 79 times in 171 selections, about as often as random selection would have done. Its higher return than momentum in this sample gives little evidence of a repeatable advantage.
 
 The universe consists of nine original Select Sector SPDR ETFs (XLB, XLE, XLF, XLI, XLK, XLP, XLU, XLV and XLY). SPY represents the broad market. The study covers January 2015 through September 2026. Prices from 2014 supply the history needed for the first signal.
 
@@ -225,7 +227,13 @@ conclusion = f"""**Was the forest worth using?** Over the full test it earned **
 
 **How much confidence is warranted?** All three block-bootstrap intervals include zero. This sample gives little evidence of a repeatable sector-selection advantage. The difference in realised wealth is meaningful to an investor who lived through this period, but 57 monthly decisions provide limited evidence about the next period."""
 display(Markdown(conclusion))''')
-md('''## 12. Limitations, evidence and conclusion
+md('''## 12. Conclusion against the approved aim
+
+For a $10,000 initial investment, the ending values in dollars were **14,455** for the forest, **13,293** for momentum and **17,085** for SPY. The extra return over momentum came with a deeper peak-to-trough loss (**26.52%** versus **12.20%** at monthly valuations).
+
+How much confidence should we place in that extra return? The forest's average monthly lead over momentum was **0.16 percentage points**. Its approximate 95% block-bootstrap interval ran from **−0.74 to +1.11 percentage points**. That range and the **46.2%** hit rate, against **46.6%** expected from random selection, give little evidence that the forest reliably selected winning sectors. **Past results cannot guarantee future returns.**
+
+### Limits of the comparison
 
 Our nine fixed ETFs do not cover the modern full eleven-sector SPDR universe. Historical GICS classification changes affect comparisons. ETFs remain diversified and liquid, but first-open prices need not match an actual order's fill. Dividend-adjusted prices approximate reinvestment; spreads, taxes, market impact and commissions are not independently reconstructed. The 7.5-bps transaction cost is only an assumption, tested at alternatives. The `^IRX` quoted yield is an approximation to a risk-free monthly rate. Drawdowns sampled monthly understate some intramonth pain. Market conditions, selected thresholds and the relatively small number of independent months limit confidence. The project tests historical value added; it does not promise future returns.
 

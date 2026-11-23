@@ -9,6 +9,17 @@
 | Topics covered | Six price-based features, probabilistic classification, walk-forward fitting, calendar-based leakage checks, portfolio construction, fees, drawdowns and paired block resampling. | Each method addresses a specific investment or measurement question. Model selection uses only the validation period. |
 | Creative implementation | The experiment tests the same rankings as both forecasts and trades. It pairs past-frequency and random-selection references with two investable benchmarks. | The results isolate different questions about probability accuracy, sector selection and realised wealth. The cost sensitivity shows how trading affects the conclusion. |
 
+## Reassessment against the course rubric
+
+| Criterion | Estimated score | Basis for the estimate |
+| --- | ---: | --- |
+| Notebook organisation | 9/10 | The opening quotes the approved aim and immediately answers it. Section 12 returns to it after the portfolio and forecast results. The shared implementation cell takes extra navigation for a reader tracing individual functions. |
+| Description of findings and outputs | 9/10 | Sections 7, 8, 10 and 12 connect wealth, drawdown, winning picks and uncertainty. The conclusion interprets the interval in monthly percentage points and explains the limit on using past results to predict future returns. Some intermediate tables still use short variable names. |
+| Topics covered | 10/10 | The notebook applies feature engineering, probability forecasting, chronological model selection, portfolio accounting and risk measurement to the same investment decision. |
+| Creative implementation | 9/10 | The same forecasts face two practical tests. Could they pick sectors that beat SPY, and could a portfolio earn more after costs? The historical-frequency and random-selection references help interpret the answers. The underlying model and momentum rule are established methods. |
+
+**Estimated total: 37/40.** This is a self-assessment against the written descriptors. The instructor assigns the grade.
+
 ## Verification on 23 November 2026
 
 - [x] Verified the SHA-256 hashes of the saved Yahoo Finance CSVs.
